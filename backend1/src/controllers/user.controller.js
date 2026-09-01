@@ -263,7 +263,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   if (!coverImageLocalPath) {
     throw new ApiError(400, "coverImage file is required");
   }
-  const coverImage = uploadOnCloudinary(avatarLocalPath);
+  const coverImage = uploadOnCloudinary(coverImageLocalPath);
   if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading the coverImage while");
   }
@@ -271,7 +271,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     req.user?._id,
     {
       $set: {
-        avatar,
+        coverImage,
       },
     },
     {
