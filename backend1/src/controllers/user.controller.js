@@ -89,8 +89,8 @@ const loginUser = asyncHandler(async (req, res) => {
   //send cookie
 
   const { username, email, password } = req.body;
-  if (!(username || email)) {
-    throw new ApiError(400, "username or password is required");
+  if (!password || !(username || email)) {
+    throw new ApiError(400, "username or email and password are required");
   }
 
   const user = await User.findOne({
@@ -185,7 +185,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { accessToken, RefreshToken },
+          { accessToken, refreshToken },
           "access token refreshed successfully"
         )
       );
@@ -209,8 +209,11 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const currentUser = asyncHandler(async (req, res) => {
-  return res.status(200).json(200, req.user, "current user fetched");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "current user fetched"));
 });
+
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullname, email } = req.body;
   if (!fullname || !email) {
@@ -227,7 +230,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     {
       new: true,
     }
-  ).select("-password");
+  ).select("-password -refreshToken");
   return res
     .status(200)
     .json(new ApiResponse(200, user, "details updated successfully"));
@@ -238,15 +241,15 @@ const updateAvatar = asyncHandler(async (req, res) => {
   if (!avatarLocalPath) {
     throw new ApiError(400, "avatar file is required");
   }
-  const avatar = uploadOnCloudinary(avatarLocalPath);
-  if (!avatar.url) {
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar.secure_url) {
     throw new ApiError(400, "Error while uploading the vatar while");
   }
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        avatar,
+        avatar: avatar.secure_url,
       },
     },
     {
@@ -255,7 +258,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
   ).select("-password");
   return res
     .status(200)
-    .json(new ApiResponse(200, "avatar updated succesfully"));
+    .json(new ApiResponse(200, user, "avatar updated succesfully"));
 });
 
 const updateCoverImage = asyncHandler(async (req, res) => {
@@ -263,15 +266,15 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   if (!coverImageLocalPath) {
     throw new ApiError(400, "coverImage file is required");
   }
-  const coverImage = uploadOnCloudinary(coverImageLocalPath);
-  if (!coverImage.url) {
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  if (!coverImage.secure_url) {
     throw new ApiError(400, "Error while uploading the coverImage while");
   }
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        coverImage,
+        coverImage: coverImage.secure_url,
       },
     },
     {
@@ -280,7 +283,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   ).select("-password");
   return res
     .status(200)
-    .json(new ApiResponse(200, "coverImage updated succesfully"));
+    .json(new ApiResponse(200, user, "coverImage updated succesfully"));
 });
 
 const getUserChannel = asyncHandler(async (req, res) => {
@@ -316,7 +319,7 @@ const getUserChannel = asyncHandler(async (req, res) => {
           $size: "$subscribers",
         },
         channelsSubscribedToCount: {
-          $size: "$subscribedTo ",
+          $size: "$subscribedTo",
         },
         isSubscribed: {
           $cond: {
@@ -374,13 +377,13 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                   $project: {
                     fullname: 1,
                     username: 1,
-                    avatar: 1 ,
+                    avatar: 1,
                   },
                 },
               ],
             },
           },
-          ,
+
           {
             $addFields: {
               owner: {
