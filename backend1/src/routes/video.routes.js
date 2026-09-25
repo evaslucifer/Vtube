@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
+  deleteVideo,
   getAllVideos,
   getVideosById,
   publishVideo,
@@ -24,4 +25,5 @@ router
   .route("/:videoId")
   .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
 
+router.route("/:videoId").delete(verifyJWT, deleteVideo);
 export default router;
