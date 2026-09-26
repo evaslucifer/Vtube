@@ -147,4 +147,32 @@ const deleteVideo = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "video deleted successfully"));
 });
-export { publishVideo, getAllVideos, getVideosById, updateVideo, deleteVideo };
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "video not found");
+  }
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "you ae not authorised to publish status");
+  }
+  video.isPublished = !video.isPublished;
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        video,
+        `video${video.isPublished ? "published" : "unpublished"} successfully`
+      )
+    );
+});
+export {
+  publishVideo,
+  getAllVideos,
+  getVideosById,
+  updateVideo,
+  deleteVideo,
+  togglePublishStatus,
+};
