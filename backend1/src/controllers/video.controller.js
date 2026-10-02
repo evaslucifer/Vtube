@@ -158,16 +158,31 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     throw new ApiError(403, "you ae not authorised to publish status");
   }
   video.isPublished = !video.isPublished;
+  await video.save();
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
         video,
-        `video${video.isPublished ? "published" : "unpublished"} successfully`
+        `video ${video.isPublished ? " published" : " unpublished"} successfully`
       )
     );
 });
+
+const incrementViews = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  const video = await Video.findById(videoId);
+  if (!videoId) {
+    throw new ApiError(404, "video not found");
+  }
+  video.views += 1;
+  await video.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { views: video.views }, "views count updated"));
+});
+
 export {
   publishVideo,
   getAllVideos,
@@ -175,4 +190,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  incrementViews,
 };

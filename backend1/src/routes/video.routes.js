@@ -5,6 +5,7 @@ import {
   deleteVideo,
   getAllVideos,
   getVideosById,
+  incrementViews,
   publishVideo,
   togglePublishStatus,
   updateVideo,
@@ -29,5 +30,5 @@ router
 router.route("/:videoId").delete(verifyJWT, deleteVideo);
 
 router.route("/:videoId/toggle-publish").patch(verifyJWT, togglePublishStatus);
-
+router.route("/:videoId/view").patch(incrementViews);
 export default router;
